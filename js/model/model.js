@@ -15,18 +15,17 @@ function Task(perfomerUser, creatorUser, description) {
 	this.creatorUser = creatorUser;
 	this.description = description;
 	this.isComplete = false;
+	this.timestamp = new Date().getTime();
 }
 
 Task.prototype.equals = function(other) {
 	return this.perfomerUser.equals(other.perfomerUser) &&
 		   this.creatorUser.equals(other.creatorUser) &&
 		   this.description === other.description &&
-		   this.isComplete === other.isComplete;
+		   this.isComplete === other.isComplete &&
+		   this.timestamp === other.timestamp;
 }
 
-function TaskList() {
-	this.tasks = [];
-}
 
 
 
