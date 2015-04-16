@@ -30,40 +30,6 @@
 //
 //
 //
-//function TaskStorage() {
-//    localStorage.clear();
-//}
-//
-//TaskStorage.prototype.add = function(task) {
-//    localStorage.setItem(task.getId(), JSON.stringify(task));
-//};
-//
-//TaskStorage.prototype.remove = function(taskId) {
-//    localStorage.removeItem(taskId);
-//};
-//
-//TaskStorage.prototype.fetchAll = function() {
-//    var tasks = [];
-//    var keys = Object.keys(localStorage);
-//
-//    for (var i = 0; i < keys.length; i++) {
-//        tasks.push(JSON.parse(localStorage.getItem(keys[i])));
-//    }
-//
-//    return tasks;
-//};
-//
-//TaskStorage.prototype.printAll = function() {
-//    var tasks = this.fetchAll();
-//
-//    for (var i = 0; i < tasks.length; i++) {
-//        console.log(tasks[i]);
-//    }
-//};
-//
-//TaskStorage.prototype.getByKey = function(key) {
-//    return JSON.parse(localStorage.getItem(key));
-//};
 
 function compareTasks(first, second) {
     if (first.getIsFinished() && !second.getIsFinished()) {
@@ -73,7 +39,7 @@ function compareTasks(first, second) {
     if (!first.getIsFinished() && second.getIsFinished()) {
         return -1;
     }
-    console.log(first.getTimestamp() + " " + second.getTimestamp());
+
     return second.getTimestamp() - first.getTimestamp();
 }
 
@@ -82,9 +48,9 @@ function generateId() {
     return generateId.count;
 }
 
-function prettyTimestampString(timestamp) {
+function prettyDateString(timestamp) {
     var date = new Date(timestamp);
-    return date.getHours() + ":" + date.getMinutes() + " " + date.getUTCDay() + "/" + date.getUTCMonth() + 1 + "/" + date.getFullYear();
+    return date.getFullYear() + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2);
 }
 
 function isValidDescription(description) {
@@ -123,77 +89,129 @@ var Event = {
 };
 
 function Task(description) {
-    var _id = generateId();
-    var _description = description;
-    var _isFinished = false;
-    var _timestamp = new Date().getTime();
-
-    this.getId = function() {
-        return _id;
-    };
-
-    this.setId = function(id) {
-        _id = id;
-    };
-
-    this.getDescription = function() {
-        return _description;
-    };
-
-    this.setDescription = function(description) {
-        _description = description;
-    };
-
-    this.getIsFinished = function() {
-        return _isFinished;
-    };
-
-    this.setIsFinished = function(isFinished) {
-        _isFinished = isFinished;
-    };
-
-    this.getTimestamp = function() {
-        return _timestamp;
-    };
-
-    this.setTimestamp = function(timestamp) {
-        _timestamp = timestamp;
-    };
+    this.id = generateId();
+    this.description = description;
+    this.isFinished = false;
+    this.timestamp = new Date().getTime();
 }
+
+Task.prototype.setId = function(id) {
+    this.id = id;
+};
+
+Task.prototype.getId = function() {
+    return this.id;
+};
+
+Task.prototype.setDescription = function(description) {
+    this.description = description;
+};
+
+Task.prototype.getDescription = function() {
+    return this.description;
+};
+
+Task.prototype.setIsFinished = function(isFinished) {
+    this.isFinished = isFinished;
+};
+
+Task.prototype.getIsFinished = function() {
+    return this.isFinished;
+};
+
+Task.prototype.setTimestamp = function(timestamp) {
+    this.timestamp = timestamp;
+};
+
+Task.prototype.getTimestamp = function() {
+    return this.timestamp;
+};
 
 Task.prototype.toString = function() {
     return this.getId() + " " + this.getDescription() + " " + this.getIsFinished();
 };
 
-function TaskList() {
-    var _storage = [];
 
-    this.add = function (task) {
-        _storage.push(task);
-    };
+//function TaskList() {
+//    var _storage = [];
+//
+//    this.add = function (task) {
+//        _storage.push(task);
+//    };
+//
+//    this.remove = function (taskId) {
+//        for (var i = 0; i < _storage.length; i++) {
+//            if (taskId === _storage[i].getId()) {
+//                _storage.splice(i, 1);
+//            }
+//        }
+//    };
+//
+//    this.getById = function (taskId) {
+//        for (var i = 0; i < _storage.length; i++) {
+//            if (taskId === _storage[i].getId()) {
+//                return _storage[i];
+//            }
+//        }
+//
+//        return null;
+//    };
+//
+//    this.fetchAll = function () {
+//        return _storage.slice(0);
+//    };
+//}
 
-    this.remove = function (taskId) {
-        for (var i = 0; i < _storage.length; i++) {
-            if (taskId === _storage[i].getId()) {
-                _storage.splice(i, 1);
-            }
-        }
-    };
-
-    this.getById = function (taskId) {
-        for (var i = 0; i < _storage.length; i++) {
-            if (taskId === _storage[i].getId()) {
-                return _storage[i];
-            }
-        }
-
-        return null;
-    };
-
-    this.fetchAll = function () {
-        return _storage.slice(0);
-    };
+function TaskStorage() {
+//    localStorage.clear();
 }
+
+TaskStorage.prototype.add = function(task) {
+    localStorage.setItem(task.getId(), JSON.stringify(task));
+};
+
+TaskStorage.prototype.remove = function(taskId) {
+    localStorage.removeItem(taskId);
+};
+
+TaskStorage.prototype.fetchAll = function() {
+    var tasks = [];
+    var keys = Object.keys(localStorage);
+    console.log(localStorage);
+    for (var i = 0; i < keys.length; i++) {
+        var taskDto = JSON.parse(localStorage.getItem(keys[i]));
+        var task = this.dtoToEntity(taskDto);
+        tasks.push(task);
+    }
+
+    return tasks;
+};
+
+TaskStorage.prototype.dtoToEntity = function(taskDto) {
+    var task = new Task(taskDto.description);
+    task.setId(taskDto.id);
+    task.setIsFinished(taskDto.isFinished);
+    task.setTimestamp(taskDto.timestamp);
+
+    return task;
+};
+
+TaskStorage.prototype.printAll = function() {
+    var tasks = this.fetchAll();
+
+    for (var i = 0; i < tasks.length; i++) {
+        console.log(tasks[i]);
+    }
+};
+
+TaskStorage.prototype.getById = function(id) {
+    var taskDto = JSON.parse(localStorage.getItem(id));
+    return this.dtoToEntity(taskDto);
+};
+
+TaskStorage.prototype.edit = function(task) {
+    localStorage.setItem(task.getId(), JSON.stringify(task));
+};
 
 function TaskService(taskList) {
     this.taskList = taskList;
@@ -248,16 +266,19 @@ TaskService.prototype.removeTask = function (taskId) {
 TaskService.prototype.finishTask = function (taskId) {
     var task = this.taskList.getById(taskId);
     task.setIsFinished(true);
+    this.taskList.edit(task);
 };
 
 TaskService.prototype.openTask = function(taskId) {
     var task = this.taskList.getById(taskId);
     task.setIsFinished(false);
+    this.taskList.edit(task);
 };
 
 TaskService.prototype.editDescriptionTask = function(taskId, newDescription) {
     var task = this.taskList.getById(taskId);
     task.setDescription(newDescription);
+    this.taskList.edit(task);
 };
 
 TaskService.prototype.printAll = function() {
@@ -315,6 +336,7 @@ function View() {
     createTaskButton.on("click", function(event, data) {
         var description = $('#createTaskArea').val();
         createTaskArea.val('');
+        $(this).attr('disabled', true);
         $(eventBus).trigger(Event.TASK_TO_ADD_VIEW, { 'description': description } );
     });
 
@@ -340,7 +362,43 @@ function convertTaskToView(task) {
     var taskEdit = $('<input type="text" hidden="true">');
     taskEdit.attr('id', 'taskEdit' + task.getId());
 
-    var time = $('<br><span>' + '// was added: ' + prettyTimestampString(task.getTimestamp()) + '</span>');
+    var saveEdit = $('<input type="button" value="save" hidden="true" disabled="true"/>');
+    saveEdit.attr('id', 'saveEdit' + task.getId());
+    var cancelEdit = $('<input type="button" value="cancel" hidden="true"/>');
+    cancelEdit.attr('id', 'cancelEdit' + task.getId());
+
+    saveEdit.on('click', function(event) {
+        var editValue = taskEdit.val();
+        if (isValidDescription(editValue)) {
+            taskDescription.val(editValue);
+            $(eventBus).trigger(Event.TASK_TO_CHANGE_VIEW, { 'description' : editValue, 'taskId' : task.getId() } );
+        }
+
+        taskDescription.show();
+        taskEdit.hide();
+        taskEdit.val('');
+        saveEdit.hide();
+        cancelEdit.hide();
+    });
+
+    taskEdit.keyup(function() {
+        var editValue = taskEdit.val();
+        if (isValidDescription(editValue)) {
+            saveEdit.attr('disabled', false);
+        } else {
+            saveEdit.attr('disabled', true);
+        }
+    });
+
+    cancelEdit.on('click', function(event) {
+        taskDescription.show();
+        taskEdit.val('');
+        taskEdit.hide();
+        saveEdit.hide();
+        cancelEdit.hide();
+    });
+
+    var time = $('<br><span>' + '// was added: ' + prettyDateString(task.getTimestamp()) + '</span>');
     var taskDescription = $('<span>' + task.getDescription() + '</span>');
     var removeTaskButton = $('<input type="button" value="remove" hidden="true"/>');
 
@@ -364,6 +422,8 @@ function convertTaskToView(task) {
     taskDescription.on('click', function(event, data) {
         taskDescription.hide();
         taskEdit.show();
+        saveEdit.show();
+        cancelEdit.show();
         taskEdit.focus();
     });
 
@@ -377,33 +437,24 @@ function convertTaskToView(task) {
         changeStatusButton.hide();
     });
 
-    taskEdit.on('blur', function(event, data) {
-        var editValue = $('#taskEdit' + task.getId()).val();
-        if (isValidDescription(editValue)) {
-            taskDescription.val(editValue);
-            $(eventBus).trigger(Event.TASK_TO_CHANGE_VIEW, { 'description' : editValue, 'taskId' : task.getId() } );
-        }
-
-        taskDescription.show();
-        taskEdit.hide();
-    });
-
     removeTaskButton.on('click', function(event, data) {
         $(eventBus).trigger(Event.REMOVED_TASK_MODEL, { 'taskId': task.getId() } );
     });
 
     taskView.append(taskEdit);
+    taskView.append(saveEdit);
+    taskView.append(cancelEdit);
     taskView.append(taskDescription);
     taskView.append(time);
-
-
 
     return taskView;
 }
 
 $(document).ready(function() {
-    var taskList = new TaskList();
+    var taskList = new TaskStorage();
     var taskService = new TaskService(taskList);
     var controller = new Controller();
     var view = new View();
+
+    $(eventBus).trigger(Event.UPDATE_VIEW, { 'tasks': taskList.fetchAll() } );
 });
