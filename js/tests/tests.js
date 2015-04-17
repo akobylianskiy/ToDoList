@@ -56,7 +56,7 @@ describe('controller', function() {
         var tasks = JSON.parse(localStorage.getItem(storageKey));
         var taskId = 0;
         for (var i = 0; i < tasks.length; i++) {
-            if (tasks[i].description === 'do homework') {
+            if (tasks[i].description === initialDescription) {
                 taskId = tasks[i].id;
                 break;
             }
@@ -84,7 +84,7 @@ describe('controller', function() {
         var tasks = JSON.parse(localStorage.getItem(storageKey));
         var taskId = 0;
         for (var i = 0; i < tasks.length; i++) {
-            if (tasks[i].description === 'do homework') {
+            if (tasks[i].description === initialDescription) {
                 taskId = tasks[i].id;
                 break;
             }
@@ -97,6 +97,60 @@ describe('controller', function() {
         for (var i = 0; i < tasks.length; i++) {
             if (tasks[i].id = taskId) {
                 assert.notEqual(changedDescription, tasks[i].description);
+            }
+        }
+    });
+
+    it('should finish task', function() {
+        var eventBus = {};
+        var $eventBus = $(eventBus);
+        new Widget(eventBus).init();
+        var before = JSON.parse(localStorage.getItem(storageKey)).length;
+        var description = 'do homework';
+        $eventBus.trigger(Event.TASK_TO_ADD_VIEW, { 'description': description } );
+
+        var tasks = JSON.parse(localStorage.getItem(storageKey));
+        var taskId = 0;
+        for (var i = 0; i < tasks.length; i++) {
+            if (tasks[i].description === description) {
+                taskId = tasks[i].id;
+                break;
+            }
+        }
+
+        $eventBus.trigger(Event.TASK_TO_FINISH_VIEW, { 'taskId': taskId} );
+
+        tasks = JSON.parse(localStorage.getItem(storageKey));
+        for (var i = 0; i < tasks.length; i++) {
+            if (tasks[i].id = taskId) {
+                assert.equal(true, tasks[i].isFinished);
+            }
+        }
+    });
+
+    it('should open task', function() {
+        var eventBus = {};
+        var $eventBus = $(eventBus);
+        new Widget(eventBus).init();
+        var before = JSON.parse(localStorage.getItem(storageKey)).length;
+        var description = 'do homework';
+        $eventBus.trigger(Event.TASK_TO_ADD_VIEW, { 'description': description } );
+
+        var tasks = JSON.parse(localStorage.getItem(storageKey));
+        var taskId = 0;
+        for (var i = 0; i < tasks.length; i++) {
+            if (tasks[i].description === description) {
+                taskId = tasks[i].id;
+                break;
+            }
+        }
+        $eventBus.trigger(Event.TASK_TO_FINISH_VIEW, { 'taskId': taskId} );
+        $eventBus.trigger(Event.TASK_TO_OPEN_VIEW, { 'taskId': taskId} );
+
+        tasks = JSON.parse(localStorage.getItem(storageKey));
+        for (var i = 0; i < tasks.length; i++) {
+            if (tasks[i].id = taskId) {
+                assert.equal(false, tasks[i].isFinished);
             }
         }
     });
