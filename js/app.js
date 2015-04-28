@@ -12,48 +12,13 @@ var Event = {
     UPDATE_VIEW: 'update_view'
 };
 
-
-var Util = {
-    prettyDateString: function (timestamp) {
-        var date = new Date(timestamp);
-        return date.getFullYear() + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2) +
-            '/' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
-    },
-
-    compareTasks: function (first, second) {
-        if (first.getIsFinished() && !second.getIsFinished()) {
-            return 1;
-        }
-
-        if (!first.getIsFinished() && second.getIsFinished()) {
-            return -1;
-        }
-
-        return second.getTimestamp() - first.getTimestamp();
-    },
-
-    isValidDescription: function (description) {
-        if (description.length == 0) {
-            return false;
-        }
-
-        for (var i = 0; i < description.length; i++) {
-            if (description[i] != ' ') {
-                return true;
-            }
-        }
-
-        return false
-    }
-};
-
-function Widget(eventBus) {
+function Widget(eventBus, widgetUser) {
     var $eventBus = $(eventBus);
 
     var idGenerator = {
         count: 0,
 
-        initGenerator: function(count) {
+        initGenerator: function (count) {
             this.count = count;
         },
 
@@ -63,8 +28,44 @@ function Widget(eventBus) {
         }
     };
 
-    function Task(description) {
+    var Util = {
+        prettyDateString: function (timestamp) {
+            var date = new Date(timestamp);
+            return date.getFullYear() + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2) +
+                '/' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
+        },
+
+        compareTasks: function (first, second) {
+            if (first.getIsFinished() && !second.getIsFinished()) {
+                return 1;
+            }
+
+            if (!first.getIsFinished() && second.getIsFinished()) {
+                return -1;
+            }
+
+            return second.getTimestamp() - first.getTimestamp();
+        },
+
+        isValidDescription: function (description) {
+            if (description.length == 0) {
+                return false;
+            }
+
+            for (var i = 0; i < description.length; i++) {
+                if (description[i] != ' ') {
+                    return true;
+                }
+            }
+
+            return false
+        }
+    };
+
+    function Task(author, assignee, description) {
         this.id = idGenerator.generateId();
+        this.author = author;
+        this.assignee = assignee;
         this.description = description;
         this.isFinished = false;
         this.timestamp = new Date().getTime();
@@ -76,6 +77,22 @@ function Widget(eventBus) {
 
     Task.prototype.getId = function () {
         return this.id;
+    };
+
+    Task.prototype.getAuthor = function () {
+        return this.author;
+    };
+
+    Task.prototype.setAuthor = function (author) {
+        this.author = author;
+    };
+
+    Task.prototype.getAssignee = function () {
+        return this.assignee;
+    };
+
+    Task.prototype.setAssignee = function (assignee) {
+        this.assignee = assignee;
     };
 
     Task.prototype.setDescription = function (description) {
@@ -103,7 +120,7 @@ function Widget(eventBus) {
     };
 
     Task.prototype.toString = function () {
-        return this.getId() + " " + this.getDescription() + " " + this.getIsFinished();
+        return this.getId() + " " + this.getAuthor() + " " + this.getAssignee() + " " + this.getDescription() + " " + this.getIsFinished();
     };
 
     function TaskList(data) {
@@ -143,7 +160,10 @@ function Widget(eventBus) {
 
     function TaskStorage() {
         this.storageKey = 'tasks';
-        localStorage.setItem(this.storageKey, JSON.stringify([]));
+
+        if (localStorage.getItem(this.storageKey) === null) {
+            localStorage.setItem(this.storageKey, JSON.stringify([]));
+        }
     }
 
     TaskStorage.prototype.save = function (tasks) {
@@ -155,7 +175,7 @@ function Widget(eventBus) {
         var tasks = [];
 
         for (var i = 0; i < data.length; i++) {
-            var task = new Task(data[i].description);
+            var task = new Task(data[i].author, data[i].assignee, data[i].description);
             task.setId(data[i].id);
             task.setTimestamp(data[i].timestamp);
             task.setIsFinished(data[i].isFinished);
@@ -173,8 +193,9 @@ function Widget(eventBus) {
         var that = this;
 
         $eventBus.on(Event.ADDED_TASK_MODEL, function (event, data) {
+            var assignee = data.assignee;
             var description = data.description;
-            var task = new Task(description);
+            var task = new Task(widgetUser, assignee, description);
             that.addTask(task);
 
             $eventBus.trigger(Event.UPDATE_VIEW, {'tasks': taskList.fetchAll() });
@@ -252,10 +273,7 @@ function Widget(eventBus) {
 
     function Controller() {
         $eventBus.on(Event.TASK_TO_ADD_VIEW, function (event, data) {
-            var description = data.description;
-            if (Util.isValidDescription(description)) {
-                $eventBus.trigger(Event.ADDED_TASK_MODEL, { 'description': description });
-            }
+            $eventBus.trigger(Event.ADDED_TASK_MODEL, data);
         });
 
         $eventBus.on(Event.TASK_TO_REMOVE_VIEW, function (event, data) {
@@ -263,10 +281,7 @@ function Widget(eventBus) {
         });
 
         $eventBus.on(Event.TASK_TO_CHANGE_VIEW, function (event, data) {
-            var description = data.description;
-            if (Util.isValidDescription(description)) {
-                $eventBus.trigger(Event.CHANGED_TASK_MODEL, data);
-            }
+            $eventBus.trigger(Event.CHANGED_TASK_MODEL, data);
         });
 
         $eventBus.on(Event.TASK_TO_FINISH_VIEW, function (event, data) {
@@ -278,32 +293,49 @@ function Widget(eventBus) {
         });
     }
 
-    function View() {
-        var widget = $('#widget');
-        var createTaskArea = $('<textarea id="createTaskArea"/><br>');
-        var createTaskButton = $('<input type="button" value="Create Task" disabled="true"/>');
+    function View(widget) {
+        var createTaskArea = $('<textarea class="form-control" id="createTaskArea"/>');
+        var createTaskAreaLabel = $('<label for="createTaskArea" class="col-sm-2 control-label">Task Description</label>');
+        var assignTo = $('<textarea class="form-control" id="assignTo">me</textarea>');
+        var assignToLabel = $('<label for="assignTo" class="col-sm-2 control-label">Assign To</label>');
+        var createTaskButton = $('<input class="btn btn-success" type="button" value="Create Task" disabled="true"/>');
 
         createTaskArea.keyup(function () {
-            if (Util.isValidDescription(createTaskArea.val())) {
+            if (Util.isValidDescription(createTaskArea.val()) && Util.isValidDescription(assignTo)) {
                 createTaskButton.attr('disabled', false);
             } else {
                 createTaskButton.attr('disabled', true);
             }
         });
 
+        assignTo.keyup(function () {
+            if (Util.isValidDescription(createTaskArea.val()) && Util.isValidDescription(assignTo.val())) {
+                createTaskButton.attr('disabled', false);
+            } else {
+                createTaskButton.attr('disabled', true);
+            }
+        });
+
+
         var emptyTaskListLabel = $('<h3>Your task list is empty now.</h3>');
         var taskList = $('<ul></ul>');
 
-        widget.append(createTaskArea);
-        widget.append(createTaskButton);
+        widget.append($('<div class="form-group"></div>').append(createTaskAreaLabel.add(createTaskArea)));
+        widget.append($('<div class="form-group"></div>').append(assignToLabel.add(assignTo)));
+        widget.append($('<div class="form-group"></div>').append($('<div class="col-sm-offset-2 col-sm-10"></div>').append(createTaskButton)));
         widget.append(emptyTaskListLabel);
         widget.append(taskList);
 
         createTaskButton.on("click", function (event, data) {
             var description = $('#createTaskArea').val();
+            var assignee = $('#assignTo').val();
+            if (assignee === 'me') {
+                assignee = widgetUser;
+            }
+
             createTaskArea.val('');
             $(this).attr('disabled', true);
-            $eventBus.trigger(Event.TASK_TO_ADD_VIEW, { 'description': description });
+            $eventBus.trigger(Event.TASK_TO_ADD_VIEW, { 'assignee': assignee, 'description': description });
         });
 
         $eventBus.on(Event.UPDATE_VIEW, function (event, data) {
@@ -318,111 +350,115 @@ function Widget(eventBus) {
             }
 
             for (var i = 0; i < tasks.length; i++) {
-                taskList.append(convertTaskToView(tasks[i]));
+                if (tasks[i].getAssignee() === widgetUser) {
+                    taskList.append(convertTaskToView(tasks[i]));
+                }
             }
         });
-    }
 
-    function convertTaskToView(task) {
-        var taskView = $('<li></li>');
-        var taskEdit = $('<input type="text" hidden="true">');
-        taskEdit.attr('id', 'taskEdit' + task.getId());
+        function convertTaskToView(task) {
+            var taskView = $('<li></li>');
+            var taskEdit = $('<input class="form-control col-lg-1" type="text" hidden="true">');
+            taskEdit.attr('id', 'taskEdit' + task.getId());
 
-        var saveEdit = $('<input type="button" value="save" hidden="true" disabled="true"/>');
-        saveEdit.attr('id', 'saveEdit' + task.getId());
-        var cancelEdit = $('<input type="button" value="cancel" hidden="true"/>');
-        cancelEdit.attr('id', 'cancelEdit' + task.getId());
+            var saveEdit = $('<input class="btn btn-success" type="button" value="save" hidden="true" disabled="true"/>');
+            saveEdit.attr('id', 'saveEdit' + task.getId());
+            var cancelEdit = $('<input class="btn btn-danger" type="button" value="cancel" hidden="true"/>');
+            cancelEdit.attr('id', 'cancelEdit' + task.getId());
 
-        saveEdit.on('click', function (event) {
-            var editValue = taskEdit.val();
-            if (Util.isValidDescription(editValue)) {
-                taskDescription.val(editValue);
-                $eventBus.trigger(Event.TASK_TO_CHANGE_VIEW, { 'description': editValue, 'taskId': task.getId() });
-            }
+            saveEdit.on('click', function (event) {
+                var editValue = taskEdit.val();
+                if (Util.isValidDescription(editValue)) {
+                    taskDescription.val(editValue);
+                    $eventBus.trigger(Event.TASK_TO_CHANGE_VIEW, { 'description': editValue, 'taskId': task.getId() });
+                }
 
-            taskDescription.show();
-            taskEdit.hide();
-            taskEdit.val('');
-            saveEdit.hide();
-            cancelEdit.hide();
-        });
+                taskDescription.show();
+                taskEdit.hide();
+                taskEdit.val('');
+                saveEdit.hide();
+                cancelEdit.hide();
+            });
 
-        taskEdit.keyup(function () {
-            var editValue = taskEdit.val();
-            if (Util.isValidDescription(editValue)) {
-                saveEdit.attr('disabled', false);
+            taskEdit.keyup(function () {
+                var editValue = taskEdit.val();
+                if (Util.isValidDescription(editValue)) {
+                    saveEdit.attr('disabled', false);
+                } else {
+                    saveEdit.attr('disabled', true);
+                }
+            });
+
+            cancelEdit.on('click', function (event) {
+                taskDescription.show();
+                taskEdit.val('');
+                taskEdit.hide();
+                saveEdit.hide();
+                cancelEdit.hide();
+            });
+
+            var time = $('<br><span>' + '// was added: ' + Util.prettyDateString(task.getTimestamp()) + '</span>');
+            var taskDescription = $('<span>' + task.toString() + '</span>');
+            var removeTaskButton = $('<input class="btn btn-danger" type="button" value="remove" hidden="true"/>');
+
+            var changeStatusButton;
+            if (task.getIsFinished()) {
+                taskDescription.css("text-decoration", "line-through");
+                changeStatusButton = $('<input class="btn btn-primary" type="button" value="open" hidden="true"/>');
+                changeStatusButton.on('click', function (event, data) {
+                    $eventBus.trigger(Event.TASK_TO_OPEN_VIEW, {'taskId': task.getId() });
+                });
             } else {
-                saveEdit.attr('disabled', true);
+                changeStatusButton = $('<input class="btn btn-primary" type="button" value="finish" hidden="true"/>');
+                changeStatusButton.on('click', function (event, data) {
+                    $eventBus.trigger(Event.TASK_TO_FINISH_VIEW, { 'taskId': task.getId() });
+                });
             }
-        });
 
-        cancelEdit.on('click', function (event) {
-            taskDescription.show();
-            taskEdit.val('');
-            taskEdit.hide();
-            saveEdit.hide();
-            cancelEdit.hide();
-        });
+            taskDescription = taskDescription.add(removeTaskButton);
+            taskDescription = taskDescription.add(changeStatusButton);
 
-        var time = $('<br><span>' + '// was added: ' + Util.prettyDateString(task.getTimestamp()) + '</span>');
-        var taskDescription = $('<span>' + task.getId() + ' ' + task.getDescription() + '</span>');
-        var removeTaskButton = $('<input type="button" value="remove" hidden="true"/>');
-
-        var changeStatusButton;
-        if (task.getIsFinished()) {
-            taskDescription.css("text-decoration", "line-through");
-            changeStatusButton = $('<input type="button" value="open" hidden="true"/>');
-            changeStatusButton.on('click', function (event, data) {
-                $eventBus.trigger(Event.TASK_TO_OPEN_VIEW, {'taskId': task.getId() });
+            taskDescription.on('click', function (event, data) {
+                taskDescription.hide();
+                taskEdit.val(task.getDescription());
+                taskEdit.show();
+                saveEdit.show();
+                cancelEdit.show();
+                taskEdit.focus();
             });
-        } else {
-            changeStatusButton = $('<input type="button" value="finish" hidden="true"/>');
-            changeStatusButton.on('click', function (event, data) {
-                $eventBus.trigger(Event.TASK_TO_FINISH_VIEW, { 'taskId': task.getId() });
+
+            taskDescription.on('mouseenter', function () {
+                removeTaskButton.show();
+                changeStatusButton.show();
             });
+
+            taskDescription.on('mouseleave', function () {
+                removeTaskButton.hide();
+                changeStatusButton.hide();
+            });
+
+            removeTaskButton.on('click', function (event, data) {
+                $eventBus.trigger(Event.TASK_TO_REMOVE_VIEW, { 'taskId': task.getId() });
+            });
+
+
+            taskView.append(taskEdit);
+            taskView.append(saveEdit);
+            taskView.append(cancelEdit);
+            taskView.append(taskDescription);
+            taskView.append(time);
+
+            return taskView;
         }
-
-        taskDescription = taskDescription.add(removeTaskButton);
-        taskDescription = taskDescription.add(changeStatusButton);
-
-        taskDescription.on('click', function (event, data) {
-            taskDescription.hide();
-            taskEdit.show();
-            saveEdit.show();
-            cancelEdit.show();
-            taskEdit.focus();
-        });
-
-        taskDescription.on('mouseenter', function () {
-            removeTaskButton.show();
-            changeStatusButton.show();
-        });
-
-        taskDescription.on('mouseleave', function () {
-            removeTaskButton.hide();
-            changeStatusButton.hide();
-        });
-
-        removeTaskButton.on('click', function (event, data) {
-            $eventBus.trigger(Event.TASK_TO_REMOVE_VIEW, { 'taskId': task.getId() });
-        });
-
-        taskView.append(taskEdit);
-        taskView.append(saveEdit);
-        taskView.append(cancelEdit);
-        taskView.append(taskDescription);
-        taskView.append(time);
-
-        return taskView;
     }
 
     return {
-        init: function () {
+        init: function (widget) {
             var taskStorage = new TaskStorage();
             var taskList = new TaskList(taskStorage.fetchAll());
             var taskService = new TaskService(taskList, taskStorage);
             var controller = new Controller();
-            var view = new View();
+            var view = new View(widget);
 
             $eventBus.trigger(Event.UPDATE_VIEW, { 'tasks': taskList.fetchAll() });
         }
@@ -430,5 +466,6 @@ function Widget(eventBus) {
 
 }
 $(document).ready(function () {
-    var widget = new Widget({}).init();
+    var eventBus = {};
+    var widget = new Widget(eventBus, 'antonio').init($('#widget'));
 });
