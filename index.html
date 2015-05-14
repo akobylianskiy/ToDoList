@@ -1,0 +1,44 @@
+<html ng-app="ToDoApp">
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+</head>
+<body>
+<div id="widget" class="container" ng-controller="TaskController">
+    <form>
+        <div class="form-group">
+            <label for="description"> Description </label>
+            <textarea class="form-control" id="description" ng-model="description"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="assigned"> Assigned To </label>
+            <input type="text" class="form-control" id="assigned" ng-model="assignee">
+        </div>
+        <button type="submit" class="btn btn-primary" ng-click="addTask()"> Create Task</button>
+    </form>
+
+    <ul class="list-group">
+        <li ng-style="task.getIsFinished() &&  {'text-decoration': 'line-through'}" class="list-group-item" ng-repeat="task in tasks() | taskOrderBy track by $index" ng-mouseover="task.show = true" ng-mouseleave="task.show = false">
+            {{ task.description }}
+            <div class="pull-right" ng-show="task.show">
+                <button type="button" class="btn btn-danger" ng-click="removeTask(task.getId())"> Remove </button>
+                <button type="button" class="btn btn-success" ng-click="changeState(task.getIsFinished(), task.getId())"> {{ state(task.getIsFinished() ) }} </button>
+            </div>
+        </li>
+
+
+    </ul>
+</div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/factories.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/filter.js"></script>
+</body>
+<script>
+
+</script>
+
+</html>
