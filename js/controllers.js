@@ -1,6 +1,7 @@
 angular.module('ToDoApp')
     .controller('TaskController', function($scope, TaskService) {
         $scope.author = 'Anton';
+        $scope.assignee = 'Anton';
 
         $scope.tasks = function () {
             return TaskService.fetchAll();
