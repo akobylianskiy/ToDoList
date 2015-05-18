@@ -2,15 +2,15 @@ angular.module('ToDoApp')
     .filter('taskOrderBy', function () {
         return function (arr) {
             arr.sort(function (first, second) {
-                if (first.getIsFinished() && !second.getIsFinished()) {
+                if (first.isFinished && !second.isFinished) {
                     return 1;
                 }
 
-                if (!first.getIsFinished() && second.getIsFinished()) {
+                if (!first.isFinished && second.isFinished) {
                     return -1;
                 }
 
-                return second.getTimestamp() - first.getTimestamp();
+                return second.timestamp - first.timestamp;
             });
 
             return arr;

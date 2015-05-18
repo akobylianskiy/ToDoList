@@ -1,5 +1,5 @@
 angular.module('ToDoApp')
-    .controller('TaskController', function($scope, TaskService) {
+    .controller('TaskListController', function ($scope, TaskService) {
         $scope.author = 'Anton';
         $scope.assignee = 'Anton';
 
@@ -34,5 +34,16 @@ angular.module('ToDoApp')
             }
 
             return 'Finish';
+        };
+    })
+    .controller('TaskEditController', function ($scope, $state, $stateParams, TaskService) {
+        $scope.task = TaskService.getTask($stateParams.id);
+
+        $scope.assignee = $scope.task.assignee;
+        $scope.description = $scope.task.description;
+
+        $scope.updateTask = function () {
+            TaskService.updateTask($stateParams.id, $scope.assignee, $scope.description);
+            $state.go('tasks');
         };
     });

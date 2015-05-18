@@ -1,0 +1,27 @@
+<form>
+    <div class="form-group">
+        <label for="description"> Description </label>
+        <textarea class="form-control" id="description" ng-model="description"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="assigned"> Assigned To </label>
+        <input type="text" class="form-control" id="assigned" ng-model="assignee">
+    </div>
+    <button type="submit" class="btn btn-primary" ng-click="addTask()"> Create Task</button>
+</form>
+
+<ul class="list-group">
+    <li ng-style="task.isFinished &&  {'text-decoration': 'line-through'}" class="list-group-item"
+        ng-repeat="task in tasks() | taskOrderBy" ng-mouseover="show = true" ng-mouseleave="show = false">
+        <a ui-sref="editTask({id:task.id})">
+            {{ task.description }}
+        </a>
+
+        <div class="pull-right" ng-show="show">
+            <button type="button" class="btn btn-danger" ng-click="removeTask(task.id)"> Remove</button>
+            <button type="button" class="btn btn-success" ng-click="changeState(task.isFinished, task.id)">
+                {{ state(task.isFinished) }}
+            </button>
+        </div>
+    </li>
+</ul>
