@@ -1,21 +1,23 @@
-<form>
+<form name="createTask">
     <div class="form-group">
         <label for="description"> Description </label>
-        <textarea class="form-control" id="description" ng-model="description"></textarea>
+        <textarea name="description" class="form-control" id="description" ng-model="description" td-description></textarea>
+        <span class="error" ng-show="createTask.description.$dirty && createTask.description.$invalid">The value is not a valid!</span>
     </div>
     <div class="form-group">
         <label for="assigned"> Assigned To </label>
-        <input type="text" class="form-control" id="assigned" ng-model="assignee">
+        <input name="assignee" type="text" class="form-control" id="assigned" ng-model="assignee" td-description>
+        <span class="error" ng-show="createTask.assignee.$dirty && createTask.assignee.$invalid">The value is not a valid!</span>
     </div>
-    <button type="submit" class="btn btn-primary" ng-click="addTask()"> Create Task</button>
+    <button type="submit" class="btn btn-primary" ng-click="addTask()" ng-disabled="createTask.$invalid"> Create Task</button>
 </form>
 
 <ul class="list-group">
-    <li ng-style="task.isFinished &&  {'text-decoration': 'line-through'}" class="list-group-item"
+    <li ng-class="{ cross: task.isFinished }" class="list-group-item"
         ng-repeat="task in tasks() | taskOrderBy" ng-mouseover="show = true" ng-mouseleave="show = false">
-        <a ui-sref="editTask({id:task.id})">
+        <span ng-click="editPage(task.id)">
             {{ task.description }}
-        </a>
+        </span>
 
         <div class="pull-right" ng-show="show">
             <button type="button" class="btn btn-danger" ng-click="removeTask(task.id)"> Remove</button>

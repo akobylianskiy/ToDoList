@@ -1,15 +1,18 @@
-<form class="container" ng-submit="updateTask()">
+<form name="editTask" class="container" ng-submit="updateTask()">
     <h2>Task</h2>
 
     <div class="form-group">
         <label for="assignee">Assignee</label>
-        <input type="text" class="form-control" id="assignee" ng-model="assignee">
+        <input name="assignee" type="text" class="form-control" id="assignee" ng-model="assignee" td-description>
+        <span class="error" ng-show="editTask.assignee.$dirty && editTask.assignee.$invalid">The value is not a valid!</span>
     </div>
     <div class="form-group">
         <label for="description">Description</label>
-        <input type="text" class="form-control" id="description" ng-model="description">
+        <input name="description" type="text" class="form-control" id="description" ng-model="description" td-description>
+        <span class="error" ng-show="editTask.description.$dirty && editTask.description.$invalid">The value is not a valid!</span>
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-default">Save Edit</button>
+        <button type="submit" class="btn btn-primary"
+                ng-disabled="editTask.$invalid">Save Edit</button>
     </div>
 </form>

@@ -1,5 +1,5 @@
 angular.module('ToDoApp')
-    .controller('TaskListController', function ($scope, TaskService) {
+    .controller('TaskListController', function ($scope, TaskService, $state) {
         $scope.author = 'Anton';
         $scope.assignee = 'Anton';
 
@@ -20,6 +20,10 @@ angular.module('ToDoApp')
             TaskService.removeTask(taskId);
         };
 
+        $scope.editPage = function (taskId) {
+            $state.go('editTask', {id: taskId});
+        };
+
         $scope.changeState = function (isFinished, taskId) {
             if (isFinished) {
                 TaskService.openTask(taskId);
@@ -37,13 +41,13 @@ angular.module('ToDoApp')
         };
     })
     .controller('TaskEditController', function ($scope, $state, $stateParams, TaskService) {
-        $scope.task = TaskService.getTask($stateParams.id);
+        $scope.task = TaskService.getTask(parseInt($stateParams.id));
 
         $scope.assignee = $scope.task.assignee;
         $scope.description = $scope.task.description;
 
         $scope.updateTask = function () {
-            TaskService.updateTask($stateParams.id, $scope.assignee, $scope.description);
+            TaskService.updateTask(parseInt($stateParams.id), $scope.assignee, $scope.description);
             $state.go('tasks');
         };
     });
