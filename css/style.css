@@ -1,0 +1,12 @@
+.cross {
+	text-decoration: line-through;
+}
+
+.error {
+	color: red;
+	display: none;
+}
+
+.ng-dirty.ng-invalid ~ span {
+	display: inline;
+}

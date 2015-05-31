@@ -1,26 +1,4 @@
-angular.module('ToDoApp')
-    .factory('Util', function () {
-        return {
-            prettyDateString: function (timestamp) {
-                var date = new Date(timestamp);
-                return date.getFullYear() + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2) +
-                    '/' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
-            },
-            isValidDescription: function (description) {
-                if (description.length == 0) {
-                    return false;
-                }
-
-                for (var i = 0; i < description.length; i++) {
-                    if (description[i] != ' ') {
-                        return true;
-                    }
-                }
-
-                return false
-            }
-        };
-    })
+angular.module('toDoApp')
     .factory('IdGenerator', function () {
         return {
             count: 0,
@@ -41,60 +19,8 @@ angular.module('ToDoApp')
             this.author = author;
             this.assignee = assignee;
             this.description = description;
-            this.isFinished = false;
+            this.finished = false;
             this.timestamp = new Date().getTime();
-        };
-
-        Task.prototype.setId = function (id) {
-            this.id = id;
-        };
-
-        Task.prototype.getId = function () {
-            return this.id;
-        };
-
-        Task.prototype.getAuthor = function () {
-            return this.author;
-        };
-
-        Task.prototype.setAuthor = function (author) {
-            this.author = author;
-        };
-
-        Task.prototype.getAssignee = function () {
-            return this.assignee;
-        };
-
-        Task.prototype.setAssignee = function (assignee) {
-            this.assignee = assignee;
-        };
-
-        Task.prototype.setDescription = function (description) {
-            this.description = description;
-        };
-
-        Task.prototype.getDescription = function () {
-            return this.description;
-        };
-
-        Task.prototype.setIsFinished = function (isFinished) {
-            this.isFinished = isFinished;
-        };
-
-        Task.prototype.getIsFinished = function () {
-            return this.isFinished;
-        };
-
-        Task.prototype.setTimestamp = function (timestamp) {
-            this.timestamp = timestamp;
-        };
-
-        Task.prototype.getTimestamp = function () {
-            return this.timestamp;
-        };
-
-        Task.prototype.toString = function () {
-            return this.getId() + " " + this.getAuthor() + " " + this.getAssignee() + " " + this.getDescription() + " " + this.getIsFinished();
         };
 
         return Task;
@@ -118,9 +44,9 @@ angular.module('ToDoApp')
 
             for (var i = 0; i < data.length; i++) {
                 var task = new Task(data[i].author, data[i].assignee, data[i].description);
-                task.setId(data[i].id);
-                task.setTimestamp(data[i].timestamp);
-                task.setIsFinished(data[i].isFinished);
+                task.id = data[i].id;
+                task.timestamp = data[i].timestamp;
+                task.finished = data[i].finished;
 
                 tasks.push(task);
             }
@@ -135,7 +61,7 @@ angular.module('ToDoApp')
             var _storage = data;
 
             if (data.length != 0) {
-                var maxId = data[data.length - 1].getId();
+                var maxId = data[data.length - 1].id;
                 IdGenerator.initGenerator(maxId);
             }
 
@@ -145,7 +71,7 @@ angular.module('ToDoApp')
 
             this.remove = function (taskId) {
                 for (var i = 0; i < _storage.length; i++) {
-                    if (taskId === _storage[i].getId()) {
+                    if (taskId === _storage[i].id) {
                         _storage.splice(i, 1);
                     }
                 }
@@ -153,7 +79,7 @@ angular.module('ToDoApp')
 
             this.getById = function (taskId) {
                 for (var i = 0; i < _storage.length; i++) {
-                    if (taskId === _storage[i].getId()) {
+                    if (taskId === _storage[i].id) {
                         return _storage[i];
                     }
                 }
@@ -187,21 +113,27 @@ angular.module('ToDoApp')
 
         this.finishTask = function (taskId) {
             var task = taskList.getById(taskId);
-            task.setIsFinished(true);
+            task.finished = true;
             var tasks = taskList.fetchAll();
             taskStorage.save(tasks);
         };
 
         this.openTask = function (taskId) {
             var task = taskList.getById(taskId);
-            task.setIsFinished(false);
+            task.finished = false;
             var tasks = taskList.fetchAll();
             taskStorage.save(tasks);
         };
 
-        this.editDescriptionTask = function (taskId, newDescription) {
+        this.getTask = function (taskId) {
+            return taskList.getById(taskId);
+        };
+
+        this.updateTask = function (taskId, assignee, description) {
             var task = taskList.getById(taskId);
-            task.setDescription(newDescription);
+            task.assignee = assignee;
+            task.description = description;
+
             var tasks = taskList.fetchAll();
             taskStorage.save(tasks);
         };

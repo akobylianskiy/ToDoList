@@ -1,0 +1,18 @@
+<form name="editTask" class="container" ng-submit="updateTask()">
+    <h2>Task</h2>
+
+    <div class="form-group">
+        <label for="assignee">Assignee</label>
+        <input name="assignee" type="text" class="form-control" id="assignee" ng-model="assignee" td-description>
+        <span class="error">The value is not a valid!</span>
+    </div>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <input name="description" type="text" class="form-control" id="description" ng-model="description" td-description>
+        <span class="error">The value is not a valid!</span>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary"
+                ng-disabled="editTask.$invalid">Save Edit</button>
+    </div>
+</form>
