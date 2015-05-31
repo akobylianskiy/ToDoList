@@ -3,5 +3,10 @@
 }
 
 .error {
-	color:#FF0000;
+	color: red;
+	display: none;
+}
+
+.ng-dirty.ng-invalid ~ span {
+	display: inline;
 }

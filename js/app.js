@@ -1,4 +1,4 @@
-angular.module('ToDoApp', ['ui.router'])
+angular.module('toDoApp', ['ui.router'])
     .config(function ($stateProvider) {
         $stateProvider
             .state('tasks', {

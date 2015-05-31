@@ -1,4 +1,4 @@
-angular.module('ToDoApp')
+angular.module('toDoApp')
     .factory('IdGenerator', function () {
         return {
             count: 0,
@@ -19,7 +19,7 @@ angular.module('ToDoApp')
             this.author = author;
             this.assignee = assignee;
             this.description = description;
-            this.isFinished = false;
+            this.finished = false;
             this.timestamp = new Date().getTime();
         };
 
@@ -46,7 +46,7 @@ angular.module('ToDoApp')
                 var task = new Task(data[i].author, data[i].assignee, data[i].description);
                 task.id = data[i].id;
                 task.timestamp = data[i].timestamp;
-                task.isFinished = data[i].isFinished;
+                task.finished = data[i].finished;
 
                 tasks.push(task);
             }
@@ -113,14 +113,14 @@ angular.module('ToDoApp')
 
         this.finishTask = function (taskId) {
             var task = taskList.getById(taskId);
-            task.isFinished = true;
+            task.finished = true;
             var tasks = taskList.fetchAll();
             taskStorage.save(tasks);
         };
 
         this.openTask = function (taskId) {
             var task = taskList.getById(taskId);
-            task.isFinished = false;
+            task.finished = false;
             var tasks = taskList.fetchAll();
             taskStorage.save(tasks);
         };

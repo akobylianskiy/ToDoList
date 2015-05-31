@@ -1,4 +1,4 @@
-angular.module('ToDoApp')
+angular.module('toDoApp')
     .directive('tdDescription', function () {
         return {
             require: 'ngModel',

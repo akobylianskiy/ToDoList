@@ -1,12 +1,12 @@
-angular.module('ToDoApp')
+angular.module('toDoApp')
     .filter('taskOrderBy', function () {
         return function (arr) {
             arr.sort(function (first, second) {
-                if (first.isFinished && !second.isFinished) {
+                if (first.finished && !second.finished) {
                     return 1;
                 }
 
-                if (!first.isFinished && second.isFinished) {
+                if (!first.finished && second.finished) {
                     return -1;
                 }
 
